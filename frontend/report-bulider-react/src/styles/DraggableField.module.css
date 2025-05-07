@@ -1,0 +1,85 @@
+/* DraggableField.module.css */
+.draggableField {
+  background-color: #f0f9ff;
+  padding: 0.875rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  cursor: grab;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #e0f2fe;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.draggableField::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(96, 165, 250, 0.1));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.draggableField:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
+  transform: translateY(-2px);
+  background-color: #e0f2fe;
+  border-color: #bae6fd;
+}
+
+.draggableField:hover::after {
+  opacity: 1;
+}
+
+.dragging {
+  opacity: 0.7;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.05);
+  transform: scale(1.02);
+  border-color: #93c5fd;
+  background-color: #dbeafe;
+}
+
+.fieldIcon {
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  background-color: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0f2fe;
+}
+
+.fieldContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.fieldName {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1e3a8a;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fieldType {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+} 
