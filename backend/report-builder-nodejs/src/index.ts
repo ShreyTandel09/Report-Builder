@@ -3,21 +3,23 @@ import express from 'express';
 // @ts-ignore - ignore TypeScript error if any
 import models from './models';
 const { sequelize } = models;
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import routes from './routes/index';
+import runAllSeeders from './seeders';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.get('/', (_req, res) => {
-  res.send('🚀 Hello from TypeScript + Express!');
-});
 
-// This might not be needed since we have a similar listen call below
-// app.listen(PORT, () => {
-//   console.log(`Server is running on http://localhost:${PORT}`);
-// });
+//middleware 
+app.use(cors());
+app.options('*', cors());
+app.use(bodyParser.json());
+// Routes
+app.use('/api', routes);
 
 if (require.main === module) {
-  const PORT = process.env.PORT || 8000;
+  const PORT = process.env.PORT || 9000;
 
   const startServer = async () => {
       try {
@@ -27,6 +29,18 @@ if (require.main === module) {
           
           await sequelize.authenticate();
           console.log('Database connected successfully');
+
+          // Run seeders if environment variable is set
+          const shouldRunSeeders = process.env.RUN_SEEDERS === 'true';
+          if (shouldRunSeeders) {
+            try {
+              await runAllSeeders(sequelize);
+              console.log('Database seeding completed');
+            } catch (seedError) {
+              console.error('Error running seeders:', seedError);
+              // Continue with server startup even if seeders fail
+            }
+          }
 
           app.listen(PORT, () => {
               console.log(`Server is running on port ${PORT}`);
@@ -40,3 +54,6 @@ if (require.main === module) {
 
   startServer();
 }
+
+// Export for testing purposes
+export default app;
