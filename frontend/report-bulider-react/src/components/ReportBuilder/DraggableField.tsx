@@ -7,6 +7,10 @@ interface DraggableFieldProps {
 }
 
 const DraggableField: React.FC<DraggableFieldProps> = ({ field, onDrop }) => {
+
+    // console.log(field);
+    console.log(field.data_type);
+
     const [isDragging, setIsDragging] = useState(false);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>): void => {
@@ -24,15 +28,15 @@ const DraggableField: React.FC<DraggableFieldProps> = ({ field, onDrop }) => {
     };
 
     // Get the appropriate icon based on field type
-    const getFieldIcon = (type: string): string => {
-        switch (type) {
-            case 'text':
+    const getFieldIcon = (data_type: string): string => {
+        switch (data_type) {
+            case 'string':
                 return '📝';
-            case 'number':
+            case 'integer':
                 return '🔢';
             case 'date':
                 return '📅';
-            case 'email':
+            case 'decimal':
                 return '📧';
             default:
                 return '📄';
@@ -47,7 +51,7 @@ const DraggableField: React.FC<DraggableFieldProps> = ({ field, onDrop }) => {
             onDragEnd={handleDragEnd}
             aria-label={`Draggable field: ${field.name}`}
         >
-            <div className={styles.fieldIcon}>{getFieldIcon(field.type)}</div>
+            <div className={styles.fieldIcon}>{getFieldIcon(field.data_type || '')}</div>
             <div className={styles.fieldContent}>
                 <div className={styles.fieldName}>{field.name}</div>
                 <div className={styles.fieldType}>{field.type}</div>

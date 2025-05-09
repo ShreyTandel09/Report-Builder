@@ -72,20 +72,20 @@ const ReportBuilder: React.FC = () => {
     };
 
     // Apply sorting to data
-    useEffect(() => {
-        if (sortConfig.key) {
-            const sortedData = [...reportData].sort((a, b) => {
-                if (a[sortConfig.key!] < b[sortConfig.key!]) {
-                    return sortConfig.direction === 'ascending' ? -1 : 1;
-                }
-                if (a[sortConfig.key!] > b[sortConfig.key!]) {
-                    return sortConfig.direction === 'ascending' ? 1 : -1;
-                }
-                return 0;
-            });
-            setReportData(sortedData);
-        }
-    }, [sortConfig, reportData]);  // Fixed dependency array
+    // useEffect(() => {
+    //     if (sortConfig.key) {
+    //         const sortedData = [...reportData].sort((a, b) => {
+    //             if (a[sortConfig.key!] < b[sortConfig.key!]) {
+    //                 return sortConfig.direction === 'ascending' ? -1 : 1;
+    //             }
+    //             if (a[sortConfig.key!] > b[sortConfig.key!]) {
+    //                 return sortConfig.direction === 'ascending' ? 1 : -1;
+    //             }
+    //             return 0;
+    //         });
+    //         setReportData(sortedData);
+    //     }
+    // }, [sortConfig, reportData]);  // Fixed dependency array
 
     // Export functions
     const handleExportCSV = (): void => {

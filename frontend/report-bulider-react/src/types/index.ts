@@ -6,14 +6,18 @@ export interface Field {
   id: string;
   name: string;
   type: string;
+  label?: string;
+  field_name?: string;
+  source_table?: string;
+  data_type?: string;
 }
 
 // Report data record type
 export interface ReportData {
-  [key: string]: string | number;
+  [key: string]: string | number | null;
 }
 
-// Sort configuration
+// Sort configuration for table
 export interface SortConfig {
   key: string | null;
   direction: 'ascending' | 'descending';

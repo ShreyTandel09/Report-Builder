@@ -1,8 +1,9 @@
 // src/components/ReportBuilder/FieldSidebar.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import DraggableField from './DraggableField';
 import { Field } from '../../types';
 import styles from '../../styles/FieldSidebar.module.css';
+import { getAvailableFields } from '../../service/api/reportBuilderService';
 
 interface FieldSidebarProps {
     fields: Field[];
@@ -10,6 +11,21 @@ interface FieldSidebarProps {
 }
 
 const FieldSidebar: React.FC<FieldSidebarProps> = ({ fields, onFieldDrop }) => {
+    const [availableFields, setAvailableFields] = useState<Field[]>([]);
+
+    useEffect(() => {
+        const fetchAvailableFields = async () => {
+            try {
+                const response = await getAvailableFields();
+                console.log(response.data);
+                setAvailableFields(response.data);
+            } catch (error) {
+                console.error('Error fetching available fields:', error);
+            }
+        };
+        fetchAvailableFields();
+    }, []);
+
     return (
         <div className={styles.sidebar}>
             <h2 className={styles.heading}>Available Fields</h2>
@@ -22,7 +38,7 @@ const FieldSidebar: React.FC<FieldSidebarProps> = ({ fields, onFieldDrop }) => {
                 />
             </div>
             <div className={styles.fieldList}>
-                {fields.map(field => (
+                {availableFields.map(field => (
                     <DraggableField
                         key={field.id}
                         field={field}
