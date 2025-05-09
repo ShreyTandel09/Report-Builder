@@ -21,7 +21,7 @@ export const seedReportColumnFields = async (sequelize: Sequelize): Promise<void
       {
         field_key: 'location',
         source_table: 'sales_table',
-        field_name: 'location',
+        field_name: 'sales.location',
         name: 'Store Location',
         label: 'Store Location',
         data_type: 'string',
@@ -33,7 +33,7 @@ export const seedReportColumnFields = async (sequelize: Sequelize): Promise<void
       {
         field_key: 'location_code',
         source_table: 'sales_table',
-        field_name: 'location_code',
+        field_name: 'sales.location_code',
         name: 'Location Code',
         label: 'Location Code',
         data_type: 'integer',
@@ -45,7 +45,7 @@ export const seedReportColumnFields = async (sequelize: Sequelize): Promise<void
       {
         field_key: 'doc_no',
         source_table: 'sales_table',
-        field_name: 'doc_no',
+        field_name: 'sales.doc_no',
         name: 'Document No',
         label: 'Document Number',
         data_type: 'integer',
@@ -57,7 +57,7 @@ export const seedReportColumnFields = async (sequelize: Sequelize): Promise<void
       {
         field_key: 'doc_date',
         source_table: 'sales_table',
-        field_name: 'doc_date',
+        field_name: 'sales.doc_date',
         name: 'Document Date',
         label: 'Document Date',
         data_type: 'date',
@@ -69,7 +69,7 @@ export const seedReportColumnFields = async (sequelize: Sequelize): Promise<void
       {
         field_key: 'net_sales_qty',
         source_table: 'sales_table',
-        field_name: 'net_sales_qty',
+        field_name: 'sales.net_sales_qty',
         name: 'Net Sales Quantity',
         label: 'Net Sales Qty',
         data_type: 'decimal',
@@ -81,7 +81,7 @@ export const seedReportColumnFields = async (sequelize: Sequelize): Promise<void
       {
         field_key: 'net_sales_qty_avg',
         source_table: 'sales_table',
-        field_name: 'net_sales_qty',
+        field_name: 'sales.net_sales_qty',
         name: 'Average Sales',
         label: 'Average Sales',
         data_type: 'decimal',
@@ -93,7 +93,7 @@ export const seedReportColumnFields = async (sequelize: Sequelize): Promise<void
       {
         field_key: 'sales_count',
         source_table: 'sales_table',
-        field_name: 'id',
+        field_name: 'sales.id',
         name: 'Sales Count',
         label: 'Number of Sales',
         data_type: 'integer',
