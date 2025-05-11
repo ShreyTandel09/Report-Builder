@@ -7,27 +7,13 @@ import styles from '../../styles/ReportBuilder.module.css';
 
 const ReportBuilder: React.FC = () => {
     // Fix 1: Properly type your state variables
-    const [availableFields, setAvailableFields] = useState<Field[]>([
-        { id: 'field1', name: 'Customer Name', type: 'text' },
-        { id: 'field2', name: 'Email', type: 'email' },
-        { id: 'field3', name: 'Purchase Date', type: 'date' },
-        { id: 'field4', name: 'Amount', type: 'number' },
-        { id: 'field5', name: 'Status', type: 'text' },
-        { id: 'field6', name: 'Category', type: 'text' },
-        { id: 'field7', name: 'Region', type: 'text' },
-        { id: 'field8', name: 'Discount', type: 'number' },
-    ]);
+    const [availableFields, setAvailableFields] = useState<Field[]>([]);
 
     // Fix 2: Explicitly set type for selectedFields
     const [selectedFields, setSelectedFields] = useState<Field[]>([]);
 
     // Sample data for the report
-    const [reportData, setReportData] = useState<ReportData[]>([
-        { 'Customer Name': 'John Doe', 'Email': 'john@example.com', 'Purchase Date': '2025-01-15', 'Amount': 250, 'Status': 'Completed', 'Category': 'Electronics', 'Region': 'North', 'Discount': 10 },
-        { 'Customer Name': 'Jane Smith', 'Email': 'jane@example.com', 'Purchase Date': '2025-01-18', 'Amount': 120, 'Status': 'Pending', 'Category': 'Clothing', 'Region': 'South', 'Discount': 5 },
-        { 'Customer Name': 'Robert Johnson', 'Email': 'robert@example.com', 'Purchase Date': '2025-01-20', 'Amount': 340, 'Status': 'Completed', 'Category': 'Home', 'Region': 'East', 'Discount': 0 },
-        { 'Customer Name': 'Sarah Williams', 'Email': 'sarah@example.com', 'Purchase Date': '2025-01-22', 'Amount': 190, 'Status': 'Cancelled', 'Category': 'Books', 'Region': 'West', 'Discount': 15 },
-    ]);
+    const [reportData, setReportData] = useState<ReportData[]>([]);
 
     // Fix 3: Initialize sortConfig with proper types
     const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -38,6 +24,7 @@ const ReportBuilder: React.FC = () => {
     // Fix 4: Proper typing for addField
     const addField = (field: Field): void => {
         try {
+            console.log("Field being added:", field);
             if (!selectedFields.some(f => f.id === field.id)) {
                 setSelectedFields([...selectedFields, field]);
             }

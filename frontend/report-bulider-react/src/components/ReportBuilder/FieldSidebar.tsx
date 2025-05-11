@@ -17,7 +17,6 @@ const FieldSidebar: React.FC<FieldSidebarProps> = ({ fields, onFieldDrop }) => {
         const fetchAvailableFields = async () => {
             try {
                 const response = await getAvailableFields();
-                console.log(response.data);
                 setAvailableFields(response.data);
             } catch (error) {
                 console.error('Error fetching available fields:', error);

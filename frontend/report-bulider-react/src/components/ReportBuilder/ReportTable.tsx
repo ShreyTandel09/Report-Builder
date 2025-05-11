@@ -1,7 +1,7 @@
-import React from 'react';
-import { Field, ReportData, SortConfig } from '../../types';
+import React, { useState } from 'react';
+import { Column, Field, ReportData, SortConfig } from '../../types';
 import styles from '../../styles/ReportTable.module.css';
-
+import { getReportData } from '../../service/api/reportBuilderService';
 interface ReportTableProps {
     selectedFields: Field[];
     data: ReportData[];
@@ -23,15 +23,69 @@ const ReportTable: React.FC<ReportTableProps> = ({
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
     };
+    const [reportData, setReportData] = useState<ReportData[]>([]);
+    const [fieldData, setFieldData] = useState<Field[]>([]);
+
+    console.log("availableData data:", reportData);
+
+    const getReportDataApi = async (fields: Field[]) => {
+        console.log("Field being processed:", fields);
+        // console.log("Field data:", fields.length);
+
+
+        let columns: Column[] = [];
+        if (fields.length === 1) {
+            // console.log("Fields:", fields[0].field_name, fields[0].label);
+            columns.push(
+                {
+                    field_name: fields[0].field_name || '',
+                    label: fields[0].label || ''
+                },
+            )
+        } else {
+            fields.forEach(field => {
+                columns.push(
+                    {
+                        field_name: field.field_name || '',
+                        label: field.label || ''
+                    },
+                )
+            })
+        }
+        console.log("Columns:", columns);
+        const response = await getReportData(columns);
+        console.log("API response data:", response.data);
+
+        const flatData = Array.isArray(response.data) ? [...response.data] : [response.data];
+        console.log('Flattened data:', flatData);
+
+
+        // for (const item of flatData) {
+        //     console.log("Item:", item);
+        //     for (const key in item) {
+        //         console.log("Key:", key);
+        //         console.log("Value:", item[key]);
+        //         // const flattenedData[key] = item;
+        //     }
+        // }
+        // console.log('Flattened data:', flattenedData);
+
+
+        setReportData(flatData);
+    }
 
     const handleDrop = (e: React.DragEvent<HTMLTableCellElement>): void => {
         e.preventDefault();
         try {
-            const fieldData = e.dataTransfer.getData('application/json');
-            console.log(fieldData);
-            if (fieldData) {
-                const field = JSON.parse(fieldData);
+            const fieldDataString = e.dataTransfer.getData('application/json');
+
+            if (fieldDataString) {
+                const field = JSON.parse(fieldDataString);
+                console.log("Parsed field:", field);
+                const updatedFields = [...fieldData, field];
+                setFieldData(updatedFields);
                 onAddField(field);
+                getReportDataApi(updatedFields);
             }
         } catch (error) {
             console.error('Error handling drop:', error);
@@ -121,18 +175,35 @@ const ReportTable: React.FC<ReportTableProps> = ({
                                 </td>
                             </tr>
                         ) : (
-                            data.length > 0 ? (
-                                data.map((row, index) => (
-                                    <tr key={index} className={index % 2 === 0 ? styles.tableBodyRowEven : styles.tableBodyRowOdd}>
-                                        {selectedFields.map(field => (
-                                            <td key={field.id} className={styles.tableBodyCell}>
-                                                {row[field.name]}
-                                            </td>
-                                        ))}
-                                        {/* Empty cell for the "Add column" header */}
-                                        <td className={styles.emptyBodyCell}></td>
-                                    </tr>
-                                ))
+                            reportData.length > 0 ? (
+                                (() => {
+                                    // Find the first field key to determine array length
+                                    const firstFieldKey = selectedFields[0]?.field_key || '';
+                                    const dataArray = reportData[0][firstFieldKey] || [];
+                                    const rowCount = Array.isArray(dataArray) ? dataArray.length : 0;
+
+                                    return Array.from({ length: rowCount }).map((_, rowIndex) => (
+                                        <tr key={rowIndex} className={rowIndex % 2 === 0 ? styles.tableBodyRowEven : styles.tableBodyRowOdd}>
+                                            {selectedFields.map(field => {
+                                                console.log("Field in row rendering:", field);
+                                                console.log("Row data:", reportData[0]);
+                                                const fieldKey = field.field_key || '';
+                                                console.log("Field key:", fieldKey);
+
+                                                // Get the array for this field and the value at current index
+                                                const valueArray = reportData[0][fieldKey];
+                                                const cellValue = Array.isArray(valueArray) ? valueArray[rowIndex] : undefined;
+
+                                                return (
+                                                    <td key={field.id} className={styles.tableBodyCell}>
+                                                        {cellValue}
+                                                    </td>
+                                                );
+                                            })}
+                                            <td className={styles.emptyBodyCell}></td>
+                                        </tr>
+                                    ));
+                                })()
                             ) : (
                                 <tr>
                                     <td
@@ -147,7 +218,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div >
     );
 };
 

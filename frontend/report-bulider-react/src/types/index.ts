@@ -10,6 +10,7 @@ export interface Field {
   field_name?: string;
   source_table?: string;
   data_type?: string;
+  field_key?: string;
 }
 
 // Report data record type
@@ -26,4 +27,9 @@ export interface SortConfig {
 // Style definitions
 export interface StylesObject {
   [key: string]: React.CSSProperties;
+}
+
+export interface Column {
+  field_name: string;
+  label: string;
 }

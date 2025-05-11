@@ -7,12 +7,7 @@ interface DraggableFieldProps {
 }
 
 const DraggableField: React.FC<DraggableFieldProps> = ({ field, onDrop }) => {
-
-    // console.log(field);
-    console.log(field.data_type);
-
     const [isDragging, setIsDragging] = useState(false);
-
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>): void => {
         try {
             e.dataTransfer.setData('application/json', JSON.stringify(field));
