@@ -10,6 +10,9 @@ interface ReportTableProps {
     onRemoveField: (fieldId: string) => void;
     sortConfig: SortConfig;
     onRequestSort: (key: string) => void;
+    onDataFetched?: (data: ReportData[]) => void;
+    onDateChange?: (date: string) => void;
+    initialDate?: string;
 }
 
 const ReportTable: React.FC<ReportTableProps> = ({
@@ -18,13 +21,22 @@ const ReportTable: React.FC<ReportTableProps> = ({
     onAddField,
     onRemoveField,
     sortConfig,
-    onRequestSort
+    onRequestSort,
+    onDataFetched,
+    onDateChange,
+    initialDate
 }) => {
     const [reportData, setReportData] = useState<ReportData[]>([]);
     const [fieldData, setFieldData] = useState<Field[]>([]);
     const [selectedDate, setSelectedDate] = useState<string>(
-        new Date().toISOString().split('T')[0]
+        initialDate || new Date().toISOString().split('T')[0]
     );
+
+    useEffect(() => {
+        if (initialDate) {
+            setSelectedDate(initialDate);
+        }
+    }, [initialDate]);
 
     // Helper to check if a field is the net_sales_qty field
     const isNetSalesQtyField = (field: Field): boolean => {
@@ -57,6 +69,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 
             const flatData = Array.isArray(response.data) ? [...response.data] : [response.data];
             setReportData(flatData);
+
         } catch (error) {
             console.error('Error fetching report data:', error);
         }
@@ -82,7 +95,12 @@ const ReportTable: React.FC<ReportTableProps> = ({
     };
 
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-        setSelectedDate(e.target.value);
+        const newDate = e.target.value;
+        setSelectedDate(newDate);
+
+        if (onDateChange) {
+            onDateChange(newDate);
+        }
     };
 
     const handleDrop = (e: React.DragEvent<HTMLTableCellElement>): void => {
@@ -113,6 +131,13 @@ const ReportTable: React.FC<ReportTableProps> = ({
             fetchReportData(fieldData);
         }
     }, [selectedDate]);
+
+    // Update reportData when data prop changes
+    useEffect(() => {
+        if (data && data.length > 0) {
+            setReportData(data);
+        }
+    }, [data]);
 
     // Render functions
     const renderHeaderCells = () => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import FieldSidebar from './FieldSidebar';
 import ReportTable from './ReportTable';
-// import { exportToCSV, exportToPDF } from '../../utils/exportUtils';
+import { exportToCSV } from '../../utils/exportUtils';
 import { Field, ReportData, SortConfig } from '../../types';
 import styles from '../../styles/ReportBuilder.module.css';
 
@@ -14,6 +14,11 @@ const ReportBuilder: React.FC = () => {
 
     // Sample data for the report
     const [reportData, setReportData] = useState<ReportData[]>([]);
+
+    // Date state - initialize with today's date
+    const [selectedDate, setSelectedDate] = useState<string>(
+        new Date().toISOString().split('T')[0]
+    );
 
     // Fix 3: Initialize sortConfig with proper types
     const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -45,6 +50,9 @@ const ReportBuilder: React.FC = () => {
     // Reset the report
     const resetReport = (): void => {
         setSelectedFields([]);
+        setReportData([]);
+        // Reset date to today
+        setSelectedDate(new Date().toISOString().split('T')[0]);
         setSortConfig({ key: null, direction: 'ascending' });
     };
 
@@ -58,31 +66,36 @@ const ReportBuilder: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
+    // Callback for when data is fetched from ReportTable
+    const handleDataFetched = (data: ReportData[]): void => {
+        setReportData(data);
+        console.log('Report data updated in parent component', data);
+    };
+
+    // Callback for when date is changed in ReportTable
+    const handleDateChange = (date: string): void => {
+        setSelectedDate(date);
+        console.log('Date updated in parent component:', date);
+    };
+
     // Apply sorting to data
-    // useEffect(() => {
-    //     if (sortConfig.key) {
-    //         const sortedData = [...reportData].sort((a, b) => {
-    //             if (a[sortConfig.key!] < b[sortConfig.key!]) {
-    //                 return sortConfig.direction === 'ascending' ? -1 : 1;
-    //             }
-    //             if (a[sortConfig.key!] > b[sortConfig.key!]) {
-    //                 return sortConfig.direction === 'ascending' ? 1 : -1;
-    //             }
-    //             return 0;
-    //         });
-    //         setReportData(sortedData);
-    //     }
-    // }, [sortConfig, reportData]);  // Fixed dependency array
+    useEffect(() => {
+        if (sortConfig.key && reportData.length > 0) {
+            // Apply sorting logic here if needed
+            // This is where you would sort the data based on sortConfig
+            // and then update reportData
+        }
+    }, [sortConfig, reportData]);
 
     // Export functions
-    const handleExportCSV = (): void => {
+    const handleExportCSV = async (): Promise<void> => {
         try {
             if (selectedFields.length === 0) {
                 alert('Please add at least one column to your report before exporting');
                 return;
             }
-            alert("Later")
-            // exportToCSV(reportData, selectedFields, 'report-data');
+            // console.log("Selected Date:", selectedDate);
+            await exportToCSV(selectedDate, selectedFields, 'report-data');
         } catch (error) {
             console.error('Error exporting to CSV:', error);
             alert('Failed to export CSV. Please try again.');
@@ -95,8 +108,7 @@ const ReportBuilder: React.FC = () => {
                 alert('Please add at least one column to your report before exporting');
                 return;
             }
-            alert("Later")
-
+            alert("Later");
             // exportToPDF(reportData, selectedFields, 'report-data');
         } catch (error) {
             console.error('Error exporting to PDF:', error);
@@ -161,6 +173,9 @@ const ReportBuilder: React.FC = () => {
                     onRemoveField={removeField}
                     sortConfig={sortConfig}
                     onRequestSort={requestSort}
+                    onDataFetched={handleDataFetched}
+                    onDateChange={handleDateChange}
+                    initialDate={selectedDate}
                 />
 
                 {/* Instructions box */}

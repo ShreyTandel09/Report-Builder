@@ -22,3 +22,15 @@ export const getReportData = async (params: ReportDataRequest) => {
     }
 };
 
+export const exportReportDataExcel = async (params: ReportDataRequest, responseType?: 'blob') => {
+    try {
+        const response = await axiosInstance.post('/export-report-data-excel', params, {
+            responseType: responseType === 'blob' ? 'blob' : 'json'
+        });
+        return response;
+    } catch (error) {
+        console.error('Error exporting report data:', error);
+        throw error;
+    }
+};
+
