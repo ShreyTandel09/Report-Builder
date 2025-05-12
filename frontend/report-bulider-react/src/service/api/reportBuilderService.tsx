@@ -13,7 +13,7 @@ interface ReportDataRequest {
 
 export const getReportData = async (params: ReportDataRequest) => {
     try {
-        console.log("Params:", params);
+        // console.log("Params:", params);
         const response = await axiosInstance.post('/get-report-data', params);
         return response.data;
     } catch (error) {

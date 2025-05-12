@@ -28,14 +28,14 @@ const FieldSidebar: React.FC<FieldSidebarProps> = ({ fields, onFieldDrop }) => {
     return (
         <div className={styles.sidebar}>
             <h2 className={styles.heading}>Available Fields</h2>
-            <div className={styles.searchContainer}>
+            {/* <div className={styles.searchContainer}>
                 <input
                     type="text"
                     className={styles.searchInput}
                     placeholder="Search fields..."
                     disabled
                 />
-            </div>
+            </div> */}
             <div className={styles.fieldList}>
                 {availableFields.map(field => (
                     <DraggableField
