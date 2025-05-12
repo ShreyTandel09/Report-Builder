@@ -7,6 +7,45 @@
   transition: box-shadow 0.3s ease;
 }
 
+/* Date Picker Styles */
+.datePickerContainer {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.datePickerLabel {
+  font-weight: 600;
+  color: #475569;
+  margin-right: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.datePicker {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  color: #334155;
+  background-color: white;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.datePicker:hover {
+  border-color: #cbd5e1;
+}
+
+.datePicker:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* End Date Picker Styles */
+
 .tableContainer:hover {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
 }

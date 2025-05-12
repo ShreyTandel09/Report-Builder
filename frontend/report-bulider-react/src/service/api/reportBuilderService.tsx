@@ -6,8 +6,19 @@ export const getAvailableFields = async () => {
     return response.data;
 };
 
-export const getReportData = async (fields: object) => {
-    const response = await axiosInstance.post('/get-report-data', { fields });
-    return response.data;
+interface ReportDataRequest {
+    columns: object;
+    date?: string;
+}
+
+export const getReportData = async (params: ReportDataRequest) => {
+    try {
+        console.log("Params:", params);
+        const response = await axiosInstance.post('/get-report-data', params);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching report data:', error);
+        throw error;
+    }
 };
 

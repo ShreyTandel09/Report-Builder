@@ -19,7 +19,10 @@ const getReportData = async (data: any): Promise<any> => {
         const columnResults: Array<{columnName: string, data: any[]}> = [];
         const normalizedResults: Record<string, any[]> = {};
 
-        const fields = data.fields;
+        console.log("Data:", data);
+
+        const fields = data.columns;
+        const date = data.date;
         for (const field of fields) {
             const fieldValue = field.field_name;
             const sourceTable = await ReportColumnField.findOne({
@@ -33,7 +36,7 @@ const getReportData = async (data: any): Promise<any> => {
                 const columnName = fieldValue.includes('.') ? fieldValue.split('.')[1] : fieldValue;
                 
                 // Use proper table alias in the query
-                const query = `SELECT ${columnName} FROM ${sourceTable.source_table}`;
+                const query = `SELECT ${columnName} FROM ${sourceTable.source_table} WHERE doc_date = '${date}'`;
                 const [sourceTableData] = await sequelize.query(query);
                 
                 // Store both the column name and its data

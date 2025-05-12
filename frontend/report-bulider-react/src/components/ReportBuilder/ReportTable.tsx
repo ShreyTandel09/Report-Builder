@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Column, Field, ReportData, SortConfig } from '../../types';
 import styles from '../../styles/ReportTable.module.css';
 import { getReportData } from '../../service/api/reportBuilderService';
+
 interface ReportTableProps {
     selectedFields: Field[];
     data: ReportData[];
@@ -26,12 +27,16 @@ const ReportTable: React.FC<ReportTableProps> = ({
     const [reportData, setReportData] = useState<ReportData[]>([]);
     const [fieldData, setFieldData] = useState<Field[]>([]);
 
+    // Add state for the date field with default to today's date
+    const [selectedDate, setSelectedDate] = useState<string>(
+        new Date().toISOString().split('T')[0]
+    );
+
     console.log("availableData data:", reportData);
 
     const getReportDataApi = async (fields: Field[]) => {
         console.log("Field being processed:", fields);
         // console.log("Field data:", fields.length);
-
 
         let columns: Column[] = [];
         if (fields.length === 1) {
@@ -53,26 +58,33 @@ const ReportTable: React.FC<ReportTableProps> = ({
             })
         }
         console.log("Columns:", columns);
-        const response = await getReportData(columns);
-        console.log("API response data:", response.data);
+        try {
+            // Include the selectedDate in the API request
+            const response = await getReportData({
+                columns: columns,
+                date: selectedDate
+            });
+            console.log("API response data:", response.data);
 
-        const flatData = Array.isArray(response.data) ? [...response.data] : [response.data];
-        console.log('Flattened data:', flatData);
+            const flatData = Array.isArray(response.data) ? [...response.data] : [response.data];
+            console.log('Flattened data:', flatData);
 
-
-        // for (const item of flatData) {
-        //     console.log("Item:", item);
-        //     for (const key in item) {
-        //         console.log("Key:", key);
-        //         console.log("Value:", item[key]);
-        //         // const flattenedData[key] = item;
-        //     }
-        // }
-        // console.log('Flattened data:', flattenedData);
-
-
-        setReportData(flatData);
+            setReportData(flatData);
+        } catch (error) {
+            console.error('Error fetching report data:', error);
+        }
     }
+
+    // Add useEffect to fetch data when date changes
+    useEffect(() => {
+        if (fieldData.length > 0) {
+            getReportDataApi(fieldData);
+        }
+    }, [selectedDate]);
+
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        setSelectedDate(e.target.value);
+    };
 
     const handleDrop = (e: React.DragEvent<HTMLTableCellElement>): void => {
         e.preventDefault();
@@ -103,6 +115,20 @@ const ReportTable: React.FC<ReportTableProps> = ({
 
     return (
         <div className={styles.tableContainer}>
+            {/* Add the date picker control */}
+            <div className={styles.datePickerContainer}>
+                <label htmlFor="report-date" className={styles.datePickerLabel}>
+                    Report Date:
+                </label>
+                <input
+                    type="date"
+                    id="report-date"
+                    value={selectedDate}
+                    onChange={handleDateChange}
+                    className={styles.datePicker}
+                />
+            </div>
+
             <div className={styles.scrollContainer}>
                 <table className={styles.table}>
                     <thead>
