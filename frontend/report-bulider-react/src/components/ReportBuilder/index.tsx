@@ -4,6 +4,7 @@ import ReportTable from './ReportTable';
 import { exportToCSV } from '../../utils/exportUtils';
 import { Field, ReportData, SortConfig } from '../../types';
 import styles from '../../styles/ReportBuilder.module.css';
+import AddFieldsModel from '../AddFields/AddFieldsModel';
 
 const ReportBuilder: React.FC = () => {
     // Fix 1: Properly type your state variables
@@ -25,6 +26,9 @@ const ReportBuilder: React.FC = () => {
         key: null,
         direction: 'ascending'  // Must be 'ascending' or 'descending'
     });
+
+    // Add state for modal visibility
+    const [isAddFieldsModalOpen, setIsAddFieldsModalOpen] = useState<boolean>(false);
 
     // Fix 4: Proper typing for addField
     const addField = (field: Field): void => {
@@ -116,6 +120,17 @@ const ReportBuilder: React.FC = () => {
         }
     };
 
+    // Modified to open the modal
+    const handleAddNewFields = (): void => {
+        setIsAddFieldsModalOpen(true);
+    }
+
+    const handleAddNewTableFields = (): void => {
+        // Logic to add new fields
+        // This could be a modal or a new component to select fields
+        alert('Add new Table functionality is not implemented yet.');  
+    }
+
     return (
         <div className={styles.container}>
             {/* Sidebar with available fields */}
@@ -126,7 +141,28 @@ const ReportBuilder: React.FC = () => {
 
             {/* Main content area */}
             <div className={styles.mainContent}>
+                <div className={styles.topBar}>
                 <h1 className={styles.pageTitle}>Report Builder</h1>
+                    {/* <div className={styles.topBarLeft}></div> */}
+                    <div className={styles.exportButtonsContainer}>
+                        <button
+                            onClick={handleAddNewFields}
+                            className={`${styles.addNewFieldButton}`}
+                            // disabled={selectedFields.length === 0}
+                            aria-label="Add New Fields"
+                        >
+                            Add New Fields
+                        </button>
+                        <button
+                            onClick={handleAddNewTableFields}
+                            className={`${styles.addNewTableButton}`}
+                            disabled={selectedFields.length === 0}
+                            aria-label="Add New Table"
+                        >
+                            Add New Table
+                        </button>
+                    </div>
+                </div>
 
                 <div className={styles.topBar}>
                     <div className={styles.topBarLeft}>
@@ -189,8 +225,16 @@ const ReportBuilder: React.FC = () => {
                     </ul>
                 </div>
             </div>
+
+            {/* Field Modal */}
+            <AddFieldsModel
+                isOpen={isAddFieldsModalOpen}
+                onClose={() => setIsAddFieldsModalOpen(false)}
+                onAddField={addField}
+                availableFields={availableFields}
+            />
         </div>
     );
 };
 
-export default ReportBuilder; 
+export default ReportBuilder;
