@@ -1,0 +1,12 @@
+
+> report-builder-nodejs@1.0.0 dev
+> ts-node-dev --respawn src/index.ts
+
+[INFO] 17:47:17 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.8.3)
+Compilation error in /var/www/html/doc/monoRepo/Report-builder/backend/report-builder-nodejs/src/routes/index.ts
+[ERROR] 17:47:34 ⨯ Unable to compile TypeScript:
+src/routes/index.ts(9,24): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: Request, res: Response) => Promise<Response<any, Record<string, any>>>' is not assignable to parameter of type 'Application<Record<string, any>>'.
+      Type '(req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>, res: Response<any, Record<string, any>>) => Promise<...>' is missing the following properties from type 'Application<Record<string, any>>': init, defaultConfiguration, engine, set, and 63 more.
+

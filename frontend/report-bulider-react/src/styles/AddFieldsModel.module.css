@@ -1,0 +1,116 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modalContent {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    width: 600px;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .modalHeader h2 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+  
+  .closeButton {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+  }
+  
+  .closeButton:hover {
+    color: #333;
+  }
+  
+  .modalBody {
+    padding: 20px;
+  }
+  
+  .searchSection, .createSection {
+    margin-bottom: 20px;
+  }
+  
+  .searchInput, .input, .select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    margin-top: 5px;
+  }
+  
+  .fieldList {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 10px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+  }
+  
+  .fieldItem {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .fieldItem:last-child {
+    border-bottom: none;
+  }
+  
+  .fieldItem:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .divider {
+    border-top: 1px solid #eee;
+    margin: 20px 0;
+  }
+  
+  .fieldGroup {
+    margin-bottom: 15px;
+  }
+  
+  .addButton {
+    background-color: #0070f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .addButton:hover {
+    background-color: #0055cc;
+  }
+  
+  @media (max-width: 768px) {
+    .modalContent {
+      width: 95%;
+    }
+  }
