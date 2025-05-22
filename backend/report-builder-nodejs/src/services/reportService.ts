@@ -1,23 +1,24 @@
 import models from '../models';
-import ReportColumnField from '../models/ReportColumnFields';
+import ReportColumnField, { ReportColumnFields } from '../models/ReportColumnFields';
 import ExcelJS from 'exceljs';
+const { Sequelize } = require('sequelize');
 
 // Extract sequelize instance
 const { sequelize } = models;
 
 const getAvailableFieldsFromDB = async (): Promise<ReportColumnField[]> => {
-    try {        
+    try {
         const availableFields = await ReportColumnField.findAll();
         return availableFields;
     } catch (error) {
         console.log(error);
-        return []; 
+        return [];
     }
 };
 
-const getReportData = async (data: any,flag:boolean = false): Promise<any> => {
+const getReportData = async (data: any, flag: boolean = false): Promise<any> => {
     try {
-        const columnResults: Array<{columnName: string, data: any[]}> = [];
+        const columnResults: Array<{ columnName: string, data: any[] }> = [];
         const normalizedResults: Record<string, any[]> = {};
 
         // console.log("Data:", data);
@@ -31,15 +32,15 @@ const getReportData = async (data: any,flag:boolean = false): Promise<any> => {
                     field_name: fieldValue
                 }
             });
-            
+
             if (sourceTable) {
                 // Extract the column name without the table prefix
                 const columnName = fieldValue.includes('.') ? fieldValue.split('.')[1] : fieldValue;
-                
+
                 // Use proper table alias in the query
                 const query = `SELECT ${columnName} FROM ${sourceTable.source_table} WHERE doc_date = '${date}'`;
                 const [sourceTableData] = await sequelize.query(query);
-                
+
                 // Store both the column name and its data
                 columnResults.push({
                     columnName,
@@ -48,10 +49,10 @@ const getReportData = async (data: any,flag:boolean = false): Promise<any> => {
             }
         }
 
-        if(flag){
+        if (flag) {
             const result = {
-                fields:fields,
-                data:columnResults
+                fields: fields,
+                data: columnResults
             }
             return result;
         }
@@ -59,11 +60,11 @@ const getReportData = async (data: any,flag:boolean = false): Promise<any> => {
         for (const { columnName, data } of columnResults) {
             // console.log(`Processing column: ${columnName}`);
             // console.log('Data:', data);
-            
+
             // Extract just the values for this column into an array
             normalizedResults[columnName] = data.map(item => item[columnName]);
         }
-        
+
         return normalizedResults;
     } catch (error) {
         console.log(error);
@@ -80,11 +81,11 @@ const exportReportData = async (data: any): Promise<any> => {
 
         const reportData = resData.data;
 
-        
+
         // Add headers first
         const headers = resData.fields.map((item: any) => item.label);
 
-        worksheet.addRow(headers);        
+        worksheet.addRow(headers);
         const maxRows = Math.max(...reportData.map((item: any) => item.data.length));
         // Add data rows
         for (let i = 0; i < maxRows; i++) {
@@ -93,7 +94,7 @@ const exportReportData = async (data: any): Promise<any> => {
             });
             worksheet.addRow(rowData);
         }
-        
+
         if (reportData.total) {
             worksheet.addRow(['Total', reportData.total]);
         }
@@ -106,8 +107,47 @@ const exportReportData = async (data: any): Promise<any> => {
     }
 }
 
+const getTableNameDB = async (): Promise<any> => {
+    const distinctSourceTables = await ReportColumnField.findAll({
+        attributes: [
+            [Sequelize.fn('DISTINCT', Sequelize.col('source_table')), 'source_table']
+        ],
+        raw: true,
+    });
+    return distinctSourceTables;
+}
+
+
+const addFieldsInDB = async (data: any): Promise<any> => {
+    try {
+        const fieldData = {
+            field_key: `${data.sourceTable}_${data.fieldName}`,
+            source_table: data.sourceTable,
+            field_name: data.fieldName,
+            name: data.fieldName, // Use fieldName as display name
+            label: data.fieldName, // Use fieldName as label
+            data_type: data.fieldType.toUpperCase(),
+            is_filterable: true,
+            is_sortable: true,
+            is_groupable: false
+        };
+
+        console.log(fieldData);
+
+        // Use create() for single record - this triggers the @AfterCreate hook
+        const result = await ReportColumnFields.create(fieldData);
+
+        return result;
+    } catch (error) {
+        console.log(error);
+        throw error; // Throw instead of returning [] so you know if it fails
+    }
+};
+
 export {
     getAvailableFieldsFromDB,
     getReportData,
-    exportReportData
+    exportReportData,
+    addFieldsInDB,
+    getTableNameDB
 };

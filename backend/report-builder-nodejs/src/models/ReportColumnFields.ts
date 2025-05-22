@@ -1,4 +1,7 @@
-import { Table, Column, Model, DataType } from 'sequelize-typescript';
+import { Table, Column, Model, DataType, BeforeCreate, AfterCreate } from 'sequelize-typescript';
+import { DynamicFieldService } from '../utils/dynamicFieldService';
+import SalesTable from './SalesTable';
+import { DynamicModelService } from '../utils/dynamicModelService';
 
 @Table({
   tableName: 'report_column_fields',
@@ -22,13 +25,13 @@ export class ReportColumnFields extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  field_name!: string; 
+  field_name!: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  name!: string; 
+  name!: string;
 
   @Column({
     type: DataType.STRING,
@@ -40,7 +43,7 @@ export class ReportColumnFields extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  data_type!: string; 
+  data_type!: string;
 
   // Optional: usability flags
   @Column({
@@ -66,6 +69,48 @@ export class ReportColumnFields extends Model {
     allowNull: true,
   })
   aggregation_type?: string; // e.g. "SUM", "COUNT"
-}
 
+  @AfterCreate
+  static async addDynamicField(instance: ReportColumnFields) {
+    console.log("Instance>>>");
+    // console.log(instance);
+    if (instance.source_table) {
+      try {
+        const sequelize = instance.sequelize;
+        if (!sequelize) {
+          throw new Error('Sequelize instance not found');
+        }
+
+        const dynamicFieldService = new DynamicFieldService(sequelize);
+        const dynamicModelService = new DynamicModelService(sequelize);
+
+        console.log('Available models in sequelize:', dynamicModelService.listAvailableModels());
+        console.log('Registered models:', dynamicModelService.listRegisteredModels());
+
+        const model = dynamicModelService.getModel(instance.source_table);
+
+        // Add column to database table
+        await dynamicFieldService.addFieldToTable(
+          instance.source_table,
+          instance.field_name,
+          instance.data_type
+        );
+
+        // Add attribute to Sequelize model
+        dynamicFieldService.addAttributeToModel(
+          model,
+          instance.field_name,
+          instance.data_type
+        );
+
+        console.log(`Dynamic field '${instance.field_name}' added successfully`);
+      } catch (error) {
+        console.error(`Error adding dynamic field '${instance.field_name}':`, error);
+        // You might want to delete the record if field addition fails
+        // await instance.destroy();
+        throw error;
+      }
+    }
+  }
+}
 export default ReportColumnFields;
