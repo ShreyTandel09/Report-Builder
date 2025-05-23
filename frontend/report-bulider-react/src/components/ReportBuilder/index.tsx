@@ -128,7 +128,7 @@ const ReportBuilder: React.FC = () => {
     const handleAddNewTableFields = (): void => {
         // Logic to add new fields
         // This could be a modal or a new component to select fields
-        alert('Add new Table functionality is not implemented yet.');  
+        alert('Add new Table functionality is not implemented yet.');
     }
 
     return (
@@ -142,7 +142,7 @@ const ReportBuilder: React.FC = () => {
             {/* Main content area */}
             <div className={styles.mainContent}>
                 <div className={styles.topBar}>
-                <h1 className={styles.pageTitle}>Report Builder</h1>
+                    <h1 className={styles.pageTitle}>Report Builder</h1>
                     {/* <div className={styles.topBarLeft}></div> */}
                     <div className={styles.exportButtonsContainer}>
                         <button
@@ -230,7 +230,6 @@ const ReportBuilder: React.FC = () => {
             <AddFieldsModel
                 isOpen={isAddFieldsModalOpen}
                 onClose={() => setIsAddFieldsModalOpen(false)}
-                onAddField={addField}
                 availableFields={availableFields}
             />
         </div>

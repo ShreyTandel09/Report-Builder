@@ -33,3 +33,9 @@ export interface Column {
   field_name: string;
   label: string;
 }
+
+export interface addNewFieldValue {
+  sourceTable: string,
+  fieldName: string,
+  fieldType: string
+}

@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Field } from '../../types';
+import { addNewFieldValue, Field } from '../../types';
 import styles from '../../styles/AddFieldsModel.module.css';
-import { getTableData } from '../../service/api/addFieldService';
+import { addNewField, getTableData } from '../../service/api/addFieldService';
 
 interface AddFieldsModelProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddField: (field: Field) => void;
   availableFields: Field[];
 }
 
 const AddFieldsModel: React.FC<AddFieldsModelProps> = ({
   isOpen,
   onClose,
-  onAddField,
   availableFields
 }) => {
   const [newFieldName, setNewFieldName] = useState('');
@@ -41,7 +39,7 @@ const AddFieldsModel: React.FC<AddFieldsModelProps> = ({
   // If the modal is not open, don't render anything
   if (!isOpen) return null;
 
-  const handleAddField = () => {
+  const handleAddField = async () => {
     // Validate field name
     if (!newFieldName.trim()) {
       alert('Please enter a field name');
@@ -55,20 +53,29 @@ const AddFieldsModel: React.FC<AddFieldsModelProps> = ({
     }
 
     // Create a new field object
-    const newField: Field = {
-      id: `field-${Date.now()}`, // Generate a unique ID
-      name: newFieldName,
-      type: newFieldType,
-      // sourceTable: selectedTableName, // Add source table to the field
-      // Add any other required properties for a Field
+    const newField: addNewFieldValue = {
+      sourceTable: selectedTableName,
+      fieldName: newFieldName,
+      fieldType: newFieldType
     };
 
+    console.log(newField);
     // Add the field and close the modal
-    onAddField(newField);
-    setNewFieldName('');
-    setNewFieldType('text');
-    setSelectedTableName(tableName.length > 0 ? tableName[0].source_table : '');
-    onClose();
+
+    try {
+      const response = await addNewField(newField);
+      console.log('Field added:', response);
+
+
+      // Reset and close
+      setNewFieldName('');
+      setNewFieldType('text');
+      setSelectedTableName(tableName.length > 0 ? tableName[0].source_table : '');
+      onClose();
+    } catch (error) {
+      console.error('Failed to add field:', error);
+      alert('Failed to add field. Please try again.');
+    }
   };
 
   // Filter available fields based on search term

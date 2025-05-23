@@ -121,18 +121,18 @@ const getTableNameDB = async (): Promise<any> => {
 const addFieldsInDB = async (data: any): Promise<any> => {
     try {
         const fieldData = {
-            field_key: `${data.sourceTable}_${data.fieldName}`,
+            field_key: data.fieldName.toLowerCase(),
             source_table: data.sourceTable,
             field_name: data.fieldName,
             name: data.fieldName, // Use fieldName as display name
             label: data.fieldName, // Use fieldName as label
             data_type: data.fieldType.toUpperCase(),
-            is_filterable: true,
-            is_sortable: true,
+            is_filterable: false,
+            is_sortable: false,
             is_groupable: false
         };
 
-        console.log(fieldData);
+        // console.log(fieldData);
 
         // Use create() for single record - this triggers the @AfterCreate hook
         const result = await ReportColumnFields.create(fieldData);
