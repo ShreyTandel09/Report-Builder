@@ -1,7 +1,7 @@
 import { Table, Column, Model, DataType, BeforeCreate, AfterCreate } from 'sequelize-typescript';
-import { DynamicFieldService } from '../utils/dynamicFieldService';
+import { DynamicFieldService } from '../services/dynamicFieldService';
 import SalesTable from './SalesTable';
-import { DynamicModelService } from '../utils/dynamicModelService';
+import { DynamicModelService } from '../services/dynamicModelService';
 
 @Table({
   tableName: 'report_column_fields',

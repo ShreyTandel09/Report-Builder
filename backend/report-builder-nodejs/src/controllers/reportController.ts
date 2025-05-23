@@ -1,15 +1,22 @@
 import httpStatus from 'http-status';
 import { addFieldsInDB, exportReportData, getAvailableFieldsFromDB, getReportData, getTableNameDB } from '../services/reportService';
 import { Request, Response, NextFunction } from 'express';
+import { ResponseHelper } from '../utils/responseHelper';
+import { responseMessage } from '../types/responseMessage.types';
 
 
-const getAvailableFields = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+
+const getAvailableFields = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
         const data = await getAvailableFieldsFromDB();
-        res.status(httpStatus.OK).json({ data });
+        return ResponseHelper.success(
+            res,
+            data,
+            responseMessage.GET_AVAILABLE_FIELD,
+        );
     } catch (error) {
         console.log(error);
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: 'An error occurred' });
+        next(error);
     }
 };
 

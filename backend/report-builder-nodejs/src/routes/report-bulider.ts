@@ -1,6 +1,7 @@
 
 import express, { Router } from 'express';
 import { exportReport, getAvailableFields, getReport, addFields, getTableName } from '../controllers/reportController';
+import { errorHandler } from '../middlewares/errorHandler';
 
 // Create router instance
 const router = Router();
@@ -16,5 +17,5 @@ router.post('/add-field', addFields)
 router.get('/get-table', getTableName)
 
 
-
+router.use(errorHandler);
 export default router;
