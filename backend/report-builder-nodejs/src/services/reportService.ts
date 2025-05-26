@@ -12,7 +12,7 @@ const getAvailableFieldsFromDB = async (): Promise<ReportColumnField[]> => {
         return availableFields;
     } catch (error) {
         console.log(error);
-        return [];
+        throw error;
     }
 };
 
@@ -68,7 +68,7 @@ const getReportData = async (data: any, flag: boolean = false): Promise<any> => 
         return normalizedResults;
     } catch (error) {
         console.log(error);
-        return {};
+        throw error;
     }
 }
 
@@ -140,7 +140,7 @@ const addFieldsInDB = async (data: any): Promise<any> => {
         return result;
     } catch (error) {
         console.log(error);
-        throw error; // Throw instead of returning [] so you know if it fails
+        throw error;
     }
 };
 

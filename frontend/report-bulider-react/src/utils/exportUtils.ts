@@ -12,6 +12,8 @@ export const exportToCSV = async (date: string, fields: any, filename: any) => {
             date: date
         }, 'blob');
         
+
+        console.log(response);
         // Create a blob from the response data
         const blob = new Blob([response.data], { 
             type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 

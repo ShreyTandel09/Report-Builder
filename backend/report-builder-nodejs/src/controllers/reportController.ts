@@ -20,18 +20,22 @@ const getAvailableFields = async (req: Request, res: Response, next: NextFunctio
     }
 };
 
-const getReport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+const getReport = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
 
     try {
         const data = await getReportData(req.body);
-        res.status(httpStatus.OK).json({ data });
+        return ResponseHelper.success(
+            res,
+            data,
+            responseMessage.REPORT_FETCHED,
+        );
     } catch (error) {
         console.log(error);
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: 'An error occurred' });
+        next(error);
     }
 }
 
-const exportReport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+const exportReport = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
         const buffer = await exportReportData(req.body);
 
@@ -41,29 +45,38 @@ const exportReport = async (req: Request, res: Response, next: NextFunction): Pr
 
         // Send the buffer directly
         res.status(httpStatus.OK).send(buffer);
+
     } catch (error) {
         console.log(error);
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: 'An error occurred' });
+        next(error);
     }
 }
 
-const getTableName = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+const getTableName = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
         const data = await getTableNameDB();
-        res.status(httpStatus.OK).json({ data });
+        return ResponseHelper.success(
+            res,
+            data,
+            responseMessage.GET_AVAILABLE_TABLE,
+        );
     } catch (error) {
         console.log(error);
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: 'An error occurred' });
+        next(error);
     }
 }
 
-const addFields = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+const addFields = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
         const data = await addFieldsInDB(req.body);
-        res.status(httpStatus.OK).json({ data });
+        return ResponseHelper.success(
+            res,
+            data,
+            responseMessage.ADD_FIELD,
+        );
     } catch (error) {
         console.log(error);
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: 'An error occurred' });
+        next(error);
     }
 }
 
