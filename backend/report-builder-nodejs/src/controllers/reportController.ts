@@ -2,7 +2,7 @@ import httpStatus from 'http-status';
 import { addFieldsInDB, exportReportData, getAvailableFieldsFromDB, getReportData, getTableNameDB } from '../services/reportService';
 import { Request, Response, NextFunction } from 'express';
 import { ResponseHelper } from '../utils/responseHelper';
-import { responseMessage } from '../types/responseMessage.types';
+import { responseMessage } from '../utils/responseMessage.types';
 
 
 

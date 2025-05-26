@@ -21,6 +21,7 @@
     "@types/cors": "^2.8.18",
     "@types/express": "^4.17.21",
     "@types/node": "^22.15.17",
+    "@types/pg": "^8.15.2",
     "@types/sequelize": "^4.28.20",
     "sequelize-cli": "^6.6.3",
     "ts-node-dev": "^2.0.0",
