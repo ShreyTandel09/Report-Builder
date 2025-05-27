@@ -7,9 +7,12 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import routes from './routes/index';
 import runAllSeeders from './seeders';
+import { DynamicModelService } from './services/dynamicModelService';
 
 const app = express();
 
+// Create instance of DynamicModelService
+const dynamicModelService = new DynamicModelService(sequelize);
 
 //middleware 
 app.use(cors());
@@ -29,6 +32,15 @@ if (require.main === module) {
 
       await sequelize.authenticate();
       console.log('Database connected successfully');
+
+      console.log('🔄 Initializing dynamic models...');
+      // Call method on the instance, not the class
+      await dynamicModelService.initializeAllModels();
+      console.log('Model initialize successfully');
+
+      const status = dynamicModelService.getInitializationStatus();
+      console.log(`✓ Dynamic models initialized: ${status.modelCount} models loaded`);
+      console.log('📋 Registered models:', status.registeredModels);
 
       // Run seeders if environment variable is set
       const shouldRunSeeders = process.env.RUN_SEEDERS === 'true';
@@ -55,5 +67,6 @@ if (require.main === module) {
   startServer();
 }
 
-// Export for testing purposes
+// Export the app and the service instance for testing purposes
 export default app;
+export { dynamicModelService };

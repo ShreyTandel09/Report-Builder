@@ -1,14 +1,17 @@
 import { Sequelize, DataTypes, QueryTypes } from 'sequelize';
-import { TableSchema } from '../types/table.types';
+import { tableSchemaValues } from '../types/table.types';
 import { getPostgresType } from '../utils/postgresHelper';
 import models from '../models';
+import { addFieldsInDB } from './reportService';
+import TableSchemas from '../models/TabelSchema';
+import { DynamicModelService } from './dynamicModelService';
 
 const sequelize: Sequelize = models.sequelize;
+const dynamicModelService = new DynamicModelService(sequelize);
 
-const createTableService = async (data: TableSchema): Promise<string> => {
+
+const createTableService = async (data: tableSchemaValues): Promise<string> => {
     try {
-
-
         const { tableName, columns } = data;
 
         if (!tableName || !columns || !Array.isArray(columns)) {
@@ -16,13 +19,21 @@ const createTableService = async (data: TableSchema): Promise<string> => {
         }
 
         if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(tableName)) {
-            throw new Error('Invalid table schema');
+            throw new Error('Invalid table name format');
         }
 
-        const attributes: any = {};
+        // Check if model already exists to avoid duplicates
+        const existingModel = dynamicModelService.getModel(tableName);
+        if (existingModel) {
+            console.log(`Model ${tableName} already exists and is registered`);
+            return tableName;
+        }
 
+
+        const attributes: any = {};
         let hasPrimaryKey = false;
 
+        // Build attributes from columns
         for (const column of columns) {
             const type = getPostgresType(column);
 
@@ -37,6 +48,7 @@ const createTableService = async (data: TableSchema): Promise<string> => {
             }
         }
 
+        // Add auto-increment ID if no primary key exists
         if (!hasPrimaryKey) {
             attributes.id = {
                 type: DataTypes.INTEGER,
@@ -45,43 +57,54 @@ const createTableService = async (data: TableSchema): Promise<string> => {
             };
         }
 
+        // Add timestamp
         attributes.created_at = {
             type: DataTypes.DATE,
             defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         };
 
-        // Dynamically define and sync the model
+        // Define and sync the dynamic model
         const dynamicModel = sequelize.define(tableName, attributes, {
             tableName,
-            timestamps: false, // Disable Sequelize's createdAt/updatedAt if not needed
+            timestamps: false,
+            modelName: tableName,
         });
 
-        await dynamicModel.sync({ force: false }); // will create if not exists
+        await dynamicModel.sync({ force: false });
 
-        // Store table schema in metadata table
-        await sequelize.query(`
-        CREATE TABLE IF NOT EXISTS table_schemas (
-            table_name VARCHAR(255) PRIMARY KEY,
-            schema_json JSONB,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+        // Register the model in DynamicModelService
+        dynamicModelService.registerModel(tableName, dynamicModel as any);
 
-        await sequelize.query(
-            `INSERT INTO table_schemas (table_name, schema_json)
-         VALUES (:tableName, :schema)
-         ON CONFLICT (table_name) DO UPDATE SET schema_json = EXCLUDED.schema_json`,
-            {
-                replacements: {
-                    tableName,
-                    schema: JSON.stringify({ tableName, columns }),
-                },
-            }
-        );
+        // Store schema in table_schemas using the model
+
+        await TableSchemas.create({
+            table_name: tableName,
+            schema_json: { tableName, columns }
+        });
+
+        // Alternative using raw query if upsert not available
+        // await sequelize.query(
+        //     `INSERT INTO table_schemas (table_name, schema_json, created_at)
+        //      VALUES (:tableName, :schema, NOW())
+        //      ON CONFLICT (table_name) 
+        //      DO UPDATE SET 
+        //         schema_json = EXCLUDED.schema_json,
+        //         updated_at = NOW()`,
+        //     {
+        //         replacements: {
+        //             tableName,
+        //             schema: JSON.stringify({ tableName, columns }),
+        //         },
+        //     }
+        // );
+
+        // Add fields to mediator table
+        await addFieldsInDB(data, true);
 
         return tableName;
+
     } catch (error) {
-        console.error('Error inserting data:', error);
+        console.error('Error creating table:', error);
         throw error;
     }
 };
@@ -97,50 +120,37 @@ const insertDataTableService = async (params: any, data: any): Promise<any> => {
             throw new Error('Invalid table name');
         }
 
-        // Get table schema using Sequelize
-        const [schemaResults] = await sequelize.query(
-            'SELECT schema_json FROM table_schemas WHERE table_name = :tableName',
-            {
-                replacements: { tableName },
-                type: QueryTypes.SELECT
+        // Try to get the model first (preferred approach)
+        const dynamicModel = dynamicModelService.getModel(tableName);
+
+        if (dynamicModel) {
+            // Use Sequelize model for type safety and validation
+            console.log(`Using registered model for table: ${tableName}`);
+
+            // Get schema for validation
+            const [schemaResults] = await sequelize.query(
+                'SELECT schema_json FROM table_schemas WHERE table_name = :tableName',
+                {
+                    replacements: { tableName },
+                    type: QueryTypes.SELECT
+                }
+            ) as any[];
+
+            if (schemaResults) {
+                const schema = schemaResults.schema_json;
+
+                // Validate required fields
+                for (const column of schema.columns) {
+                    if (column.required && !data.hasOwnProperty(column.name)) {
+                        throw new Error(`Required field '${column.name}' is missing`);
+                    }
+                }
             }
-        ) as any[];
 
-        if (!schemaResults) {
-            throw new Error(`Table '${tableName}' not found`);
+            // Use the model to create the record
+            const result = await dynamicModel.create(data);
+            return result;
         }
-
-        const schema = schemaResults.schema_json;
-
-        // Validate required fields
-        for (const column of schema.columns) {
-            if (column.required && !data.hasOwnProperty(column.name)) {
-                throw new Error(`Required field '${column.name}' is missing`);
-            }
-        }
-
-        // Build INSERT query
-        const columns = Object.keys(data);
-        const values = Object.values(data);
-
-        const insertQuery = `
-            INSERT INTO "${tableName}" (${columns.map(col => `"${col}"`).join(', ')}) 
-            VALUES (${columns.map((_, i) => `:param${i}`).join(', ')}) 
-            RETURNING *
-        `;
-
-        // Create replacements object for Sequelize
-        const replacements: any = {};
-        values.forEach((value, i) => {
-            replacements[`param${i}`] = value;
-        });
-
-        const [results] = await sequelize.query(insertQuery, {
-            replacements,
-            type: QueryTypes.INSERT
-        });
-
-        return results;
     } catch (error) {
         console.error('Error inserting data:', error);
         throw error;
@@ -158,32 +168,15 @@ const getTableDataService = async (params: any): Promise<any> => {
             throw new Error('Invalid table name');
         }
 
-        // Get table schema using Sequelize
-        const [schemaResults] = await sequelize.query(
-            'SELECT schema_json FROM table_schemas WHERE table_name = :tableName',
-            {
-                replacements: { tableName },
-                type: QueryTypes.SELECT
-            }
-        ) as any[];
+        // Try to get the model first
+        const dynamicModel = dynamicModelService.getModel(tableName);
 
-        if (!schemaResults) {
-            throw new Error(`Table '${tableName}' not found`);
+        if (dynamicModel) {
+            // Use Sequelize model for better query building
+            console.log(`Using registered model for table: ${tableName}`);
+            const results = await dynamicModel.findAll();
+            return results;
         }
-
-        const schema = schemaResults.schema_json;
-
-        // Build SELECT query
-        const selectQuery = `
-            SELECT ${schema.columns.map((col: any) => `"${col.name}"`).join(', ')}
-            FROM "${tableName}"
-        `;
-
-        const [results] = await sequelize.query(selectQuery, {
-            type: QueryTypes.SELECT
-        });
-
-        return results;
     } catch (error) {
         console.error('Error getting table data:', error);
         throw error;
@@ -196,8 +189,6 @@ const getTableDataService = async (params: any): Promise<any> => {
 const updateTableDataService = async (params: any, data: any): Promise<any> => {
     try {
         const { tableName, id } = params;
-
-        // Handle different data structures - check if updateData exists, otherwise use data directly
         const updateData = data?.updateData || data;
 
         // Validate inputs
@@ -205,12 +196,8 @@ const updateTableDataService = async (params: any, data: any): Promise<any> => {
             throw new Error('Update data is required and must be an object');
         }
 
-        if (!tableName) {
-            throw new Error('Table name is required');
-        }
-
-        if (!id) {
-            throw new Error('ID is required');
+        if (!tableName || !id) {
+            throw new Error('Table name and ID are required');
         }
 
         // Validate table name
@@ -218,62 +205,26 @@ const updateTableDataService = async (params: any, data: any): Promise<any> => {
             throw new Error('Invalid table name');
         }
 
-        // Get table schema using Sequelize
-        const [schemaResults] = await sequelize.query(
-            'SELECT schema_json FROM table_schemas WHERE table_name = :tableName',
-            {
-                replacements: { tableName },
-                type: QueryTypes.SELECT
+        // Try to get the model first
+        const dynamicModel = dynamicModelService.getModel(tableName);
+
+        if (dynamicModel) {
+            // Use Sequelize model for update
+            console.log(`Using registered model for table: ${tableName}`);
+
+            const [affectedRows] = await dynamicModel.update(updateData, {
+                where: { id },
+                returning: true
+            });
+
+            if (affectedRows === 0) {
+                throw new Error(`No record found with ID '${id}' in table '${tableName}'`);
             }
-        ) as any[];
 
-        if (!schemaResults) {
-            throw new Error(`Table '${tableName}' not found`);
+            // Return the updated record
+            const updatedRecord = await dynamicModel.findByPk(id);
+            return updatedRecord;
         }
-
-        const schema = schemaResults.schema_json;
-
-        // Validate schema exists
-        if (!schema || !schema.columns) {
-            throw new Error(`Invalid schema for table '${tableName}'`);
-        }
-
-        // Validate required fields
-        for (const column of schema.columns) {
-            if (column.required && !updateData.hasOwnProperty(column.name)) {
-                throw new Error(`Required field '${column.name}' is missing`);
-            }
-        }
-
-        // Get the keys and values for the update
-        const columns = Object.keys(updateData);
-        const values = Object.values(updateData);
-
-        // Make sure we have data to update
-        if (columns.length === 0) {
-            throw new Error('No data provided for update');
-        }
-
-        // Build UPDATE query
-        const updateQuery = `
-            UPDATE "${tableName}"
-            SET ${columns.map((col, i) => `"${col}" = :param${i}`).join(', ')}
-            WHERE id = :id
-            RETURNING *
-        `;
-
-        // Create replacements object for Sequelize
-        const replacements: any = { id };
-        values.forEach((value, i) => {
-            replacements[`param${i}`] = value;
-        });
-
-        const [results] = await sequelize.query(updateQuery, {
-            replacements,
-            type: QueryTypes.UPDATE
-        });
-
-        return results;
     } catch (error) {
         console.error('Error updating table data:', error);
         throw error;
@@ -284,13 +235,8 @@ const deleteTableDataService = async (params: any): Promise<any> => {
     try {
         const { tableName, id } = params;
 
-        // Validate inputs
-        if (!tableName) {
-            throw new Error('Table name is required');
-        }
-
-        if (!id) {
-            throw new Error('ID is required');
+        if (!tableName || !id) {
+            throw new Error('Table name and ID are required');
         }
 
         // Validate table name format
@@ -298,64 +244,36 @@ const deleteTableDataService = async (params: any): Promise<any> => {
             throw new Error('Invalid table name format');
         }
 
-        // First, check if the table exists in our schema registry
-        const [schemaResults] = await sequelize.query(
-            'SELECT schema_json FROM table_schemas WHERE table_name = :tableName',
-            {
-                replacements: { tableName },
-                type: QueryTypes.SELECT
+        // Try to get the model first
+        const dynamicModel = dynamicModelService.getModel(tableName);
+
+        if (dynamicModel) {
+            // Use Sequelize model for delete
+            console.log(`Using registered model for table: ${tableName}`);
+
+            // Get the record before deleting
+            const recordToDelete = await dynamicModel.findByPk(id);
+
+            if (!recordToDelete) {
+                throw new Error(`Record with ID '${id}' not found in table '${tableName}'`);
             }
-        ) as any[];
 
-        if (!schemaResults) {
-            throw new Error(`Table '${tableName}' not found in schema registry`);
-        }
+            // Delete the record
+            const affectedRows = await dynamicModel.destroy({
+                where: { id }
+            });
 
-        // Check if the record exists before attempting to delete
-        const [existingRecord] = await sequelize.query(
-            `SELECT id FROM "${tableName}" WHERE id = :id`,
-            {
-                replacements: { id },
-                type: QueryTypes.SELECT
+            if (affectedRows === 0) {
+                throw new Error(`Failed to delete record with ID '${id}' from table '${tableName}'`);
             }
-        ) as any[];
 
-        if (!existingRecord) {
-            throw new Error(`Record with ID '${id}' not found in table '${tableName}'`);
+            return {
+                success: true,
+                deletedRecord: recordToDelete,
+                affectedRows: affectedRows,
+                message: `Successfully deleted record with ID '${id}' from table '${tableName}'`
+            };
         }
-
-        // First get the record that will be deleted for return purposes
-        const [recordToDelete] = await sequelize.query(
-            `SELECT * FROM "${tableName}" WHERE id = :id`,
-            {
-                replacements: { id },
-                type: QueryTypes.SELECT
-            }
-        ) as any[];
-
-        // Build DELETE query
-        const deleteQuery = `DELETE FROM "${tableName}" WHERE id = :id`;
-
-        // Execute the delete query
-        const results = await sequelize.query(deleteQuery, {
-            replacements: { id },
-            type: QueryTypes.DELETE
-        });
-
-        // Check if any rows were actually deleted
-        // results[1] contains the number of affected rows for DELETE operations
-        const affectedRows = Array.isArray(results) ? results[1] : 0;
-
-        if (affectedRows === 0) {
-            throw new Error(`Failed to delete record with ID '${id}' from table '${tableName}'`);
-        }
-
-        return {
-            success: true,
-            deletedRecord: recordToDelete,
-            affectedRows: affectedRows,
-            message: `Successfully deleted record with ID '${id}' from table '${tableName}'`
-        };
 
     } catch (error) {
         console.error('Error deleting table data:', error);

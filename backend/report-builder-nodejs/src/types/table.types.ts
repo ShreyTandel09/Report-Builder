@@ -1,4 +1,4 @@
-export interface TableColumn {
+export interface tableColumnValues {
     name: string;
     type: 'VARCHAR' | 'INTEGER' | 'BOOLEAN' | 'DATE' | 'TEXT' | 'DECIMAL';
     length?: number;
@@ -6,7 +6,7 @@ export interface TableColumn {
     primaryKey?: boolean;
 }
 
-export interface TableSchema {
+export interface tableSchemaValues {
     tableName: string;
-    columns: TableColumn[];
+    columns: tableColumnValues[];
 }

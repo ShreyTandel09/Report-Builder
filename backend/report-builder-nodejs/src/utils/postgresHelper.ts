@@ -1,7 +1,7 @@
-import { TableColumn } from "../types/table.types";
+import { tableColumnValues } from "../types/table.types";
 
 // Helper function to convert column type to PostgreSQL type
-export const getPostgresType = (column: TableColumn): string => {
+export const getPostgresType = (column: tableColumnValues): string => {
     switch (column.type) {
         case 'VARCHAR':
             return `VARCHAR(${column.length || 255})`;

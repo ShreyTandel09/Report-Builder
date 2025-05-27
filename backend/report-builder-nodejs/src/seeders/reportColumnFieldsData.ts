@@ -8,14 +8,14 @@ import ReportColumnFields from '../models/ReportColumnFields';
 export const seedReportColumnFields = async (sequelize: Sequelize): Promise<void> => {
   try {
     console.log('Seeding report column fields data...');
-    
+
     // Check if table exists and is empty
     const count = await ReportColumnFields.count();
     if (count > 0) {
       console.log('Report column fields data already exists. Skipping seeder.');
       return;
     }
-    
+
     // Sample report column fields data that maps to sales_table
     const reportColumnFieldsData = [
       {
@@ -103,10 +103,10 @@ export const seedReportColumnFields = async (sequelize: Sequelize): Promise<void
         aggregation_type: 'COUNT'
       }
     ];
-    
+
     // Insert data
     await ReportColumnFields.bulkCreate(reportColumnFieldsData);
-    
+
     console.log('Report column fields data seeded successfully!');
   } catch (error) {
     console.error('Error seeding report column fields data:', error);

@@ -1,6 +1,8 @@
 import models from '../models';
 import ReportColumnField, { ReportColumnFields } from '../models/ReportColumnFields';
 import ExcelJS from 'exceljs';
+import { capitalizeWords, toUnderscore } from '../utils/namingHelper';
+import { getPostgresType } from '../utils/postgresHelper';
 const { Sequelize } = require('sequelize');
 
 // Extract sequelize instance
@@ -118,25 +120,46 @@ const getTableNameDB = async (): Promise<any> => {
 }
 
 
-const addFieldsInDB = async (data: any): Promise<any> => {
+const addFieldsInDB = async (data: any, isTableCreate = false): Promise<any> => {
     try {
-        const fieldData = {
-            field_key: data.fieldName.toLowerCase(),
-            source_table: data.sourceTable,
-            field_name: data.fieldName,
-            name: data.fieldName, // Use fieldName as display name
-            label: data.fieldName, // Use fieldName as label
-            data_type: data.fieldType.toUpperCase(),
-            is_filterable: false,
-            is_sortable: false,
-            is_groupable: false
-        };
+        console.log(isTableCreate);
+        let fieldData: any = {};
+        let result: any = {};
 
-        // console.log(fieldData);
 
+
+        if (isTableCreate) {
+
+            data.columns.forEach(async (field: any) => {
+                console.log(field);
+                fieldData = {
+                    field_key: toUnderscore(field.name),
+                    source_table: data.tableName,
+                    field_name: `${data.tableName}.${field.name} `,
+                    name: capitalizeWords(field.name),
+                    label: capitalizeWords(field.name),
+                    data_type: getPostgresType(field.type),
+                    is_filterable: false,
+                    is_sortable: false,
+                    is_groupable: false
+                };
+            });
+        } else {
+            fieldData = {
+                field_key: toUnderscore(data.fieldName),
+                source_table: data.sourceTable,
+                field_name: `${data.sourceTable}.${toUnderscore(data.fieldName)} `,
+                name: capitalizeWords(data.fieldName),
+                label: capitalizeWords(data.fieldName),
+                data_type: getPostgresType(data.fieldType),
+                is_filterable: false,
+                is_sortable: false,
+                is_groupable: false
+            };
+        }
+        console.log(fieldData);
         // Use create() for single record - this triggers the @AfterCreate hook
-        const result = await ReportColumnFields.create(fieldData);
-
+        result = await ReportColumnFields.create(fieldData);
         return result;
     } catch (error) {
         console.log(error);

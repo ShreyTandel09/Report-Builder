@@ -5,7 +5,7 @@ import { DynamicModelService } from '../services/dynamicModelService';
 
 @Table({
   tableName: 'report_column_fields',
-  timestamps: true,
+  timestamps: false,
 })
 export class ReportColumnFields extends Model {
   @Column({
@@ -70,9 +70,21 @@ export class ReportColumnFields extends Model {
   })
   aggregation_type?: string; // e.g. "SUM", "COUNT"
 
+  @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+  })
+  created_at!: Date;
+
+  @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+  })
+  updated_at!: Date;
+
   @AfterCreate
   static async addDynamicField(instance: ReportColumnFields) {
-    console.log("Instance>>>");
+    // console.log("Instance>>>");
     // console.log(instance);
     if (instance.source_table) {
       try {
@@ -88,18 +100,21 @@ export class ReportColumnFields extends Model {
         console.log('Registered models:', dynamicModelService.listRegisteredModels());
 
         const model = dynamicModelService.getModel(instance.source_table);
+        console.log("------------------------")
+
+        console.log(model)
 
         // Add column to database table
         await dynamicFieldService.addFieldToTable(
           instance.source_table,
-          instance.field_name,
+          instance.field_key,
           instance.data_type
         );
 
         // Add attribute to Sequelize model
         dynamicFieldService.addAttributeToModel(
           model,
-          instance.field_name,
+          instance.field_key,
           instance.data_type
         );
 
